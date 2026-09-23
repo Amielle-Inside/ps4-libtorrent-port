@@ -1,0 +1,18 @@
+# Minimal smoke test: links libtorrent statically, initializes engine,
+# prints torrent::version() via debugnet/log. Proves the port compiles+links.
+OO_PS4_TOOLCHAIN ?= /opt/OpenOrbis-PS4-Toolchain
+PREFIX ?= /src/build/oo
+CXX := $(OO_PS4_TOOLCHAIN)/bin/clang++
+CXXFLAGS := -std=c++17 -O2 -I$(OO_PS4_TOOLCHAIN)/include -I$(PREFIX)/include \
+            -DPS4_PORT=1
+LDFLAGS := -L$(OO_PS4_TOOLCHAIN)/lib -L$(PREFIX)/lib \
+           -ltorrent -lz -lc -lkernel -lpthread -lSceLibcStubs \
+           -Wl,-pie -Wl,--eh-frame-hdr
+
+all: torrent_test.elf
+
+torrent_test.elf: main.cc
+	$(CXX) $(CXXFLAGS) main.cc -o $@ $(LDFLAGS)
+
+clean:
+	rm -f torrent_test.elf

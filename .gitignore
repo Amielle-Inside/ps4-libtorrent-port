@@ -1,0 +1,8 @@
+.PHONY: all
+deps/
+build/
+*.o
+*.elf
+*.oelf
+*.pkg
+.dockerenv
