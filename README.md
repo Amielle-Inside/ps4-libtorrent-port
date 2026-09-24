@@ -1,3 +1,6 @@
+# Disclaimer ★
+This port and creation was done with Hermes Agent using GLM 5.3!
+
 # ps4-libtorrent-port ★
 
 Native BitTorrent client for PlayStation 4 (homebrew, jailbroken/exploited consoles).
