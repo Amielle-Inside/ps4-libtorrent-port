@@ -1,0 +1,4 @@
+#ifndef _NETINET_IP_PS4STUB_SOLIP
+#define _NETINET_IP_PS4STUB_SOLIP
+#define SOL_IP IPPROTO_IP
+#endif
