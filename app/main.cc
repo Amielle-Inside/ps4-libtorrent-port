@@ -19,7 +19,7 @@ extern "C" void* _ZTHN7torrent6system6Thread6m_selfE() { return nullptr; }
 
 int main() {
     std::printf("[ps4-torrent] boot\n");
-    // initialize thread library + engine (exercises Poll::create() → epoll)
+    torrent::initialize_main_thread();
     torrent::initialize();
     std::printf("[ps4-torrent] engine initialized OK\n");
     torrent::cleanup();
