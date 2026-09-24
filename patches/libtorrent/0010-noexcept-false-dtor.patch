@@ -1,0 +1,26 @@
+diff --git a/src/tracker/tracker_worker.cc b/src/tracker/tracker_worker.cc
+index 4df4ce6..7c9d402 100644
+--- a/src/tracker/tracker_worker.cc
++++ b/src/tracker/tracker_worker.cc
+@@ -17,7 +17,7 @@ TrackerWorker::TrackerWorker(TrackerInfo info, int flags)
+   m_state.m_flags = flags;
+ }
+ 
+-TrackerWorker::~TrackerWorker() noexcept(false) {
++TrackerWorker::~TrackerWorker() {
+   if (!m_state.is_deleted())
+     throw internal_error("TrackerWorker destroyed without being marked as deleted.");
+ }
+diff --git a/src/tracker/tracker_worker.h b/src/tracker/tracker_worker.h
+index 9081126..d757416 100644
+--- a/src/tracker/tracker_worker.h
++++ b/src/tracker/tracker_worker.h
+@@ -33,7 +33,7 @@ struct TrackerInfo {
+ class TrackerWorker {
+ public:
+   TrackerWorker(TrackerInfo info, int flags = 0);
+-  virtual ~TrackerWorker() noexcept(false);
++  virtual ~TrackerWorker();
+ 
+   // Public members do not require locking:
+ 

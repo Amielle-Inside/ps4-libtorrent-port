@@ -1,0 +1,18 @@
+diff --git a/src/torrent/runtime/socket_manager.h b/src/torrent/runtime/socket_manager.h
+index 3986cc3..07d0c41 100644
+--- a/src/torrent/runtime/socket_manager.h
++++ b/src/torrent/runtime/socket_manager.h
+@@ -34,7 +34,12 @@ enum class socket_manager_category_t : uint32_t {
+   category_files      // open files (mmap, etc.)
+ };
+ 
+-using enum socket_manager_category_t;
++// PS4 port (clang 10): no `using enum` — use constexpr aliases instead
++constexpr socket_manager_category_t category_generic = socket_manager_category_t::category_generic;
++constexpr socket_manager_category_t category_http    = socket_manager_category_t::category_http;
++constexpr socket_manager_category_t category_internal = socket_manager_category_t::category_internal;
++constexpr socket_manager_category_t category_rpc     = socket_manager_category_t::category_rpc;
++constexpr socket_manager_category_t category_files   = socket_manager_category_t::category_files;
+ 
+ struct SocketInfo {
+   // TODO: Replace with Event*, and add thread to PollEvent?

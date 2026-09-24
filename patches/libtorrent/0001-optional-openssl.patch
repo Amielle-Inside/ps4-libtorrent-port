@@ -1,0 +1,18 @@
+diff --git a/configure.ac b/configure.ac
+index 37009d9..58fa6ce 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -79,7 +79,12 @@ CFLAGS="$LIBCURL_CFLAGS $PTHREAD_CFLAGS $ZLIB_CFLAGS $CFLAGS"
+ CXXFLAGS="$LIBCURL_CFLAGS $LIBCURL_CPPFLAGS $PTHREAD_CFLAGS $ZLIB_CFLAGS $CXXFLAGS"
+ LIBS="$LIBCURL_LIBS $ATOMIC_LIBS $PTHREAD_LIBS $ZLIB_LIBS $LIBS"
+ 
+-TORRENT_CHECK_OPENSSL
++AC_ARG_WITH(openssl,
++  AS_HELP_STRING([--with-openssl],[enable OpenSSL crypto (MSE) [[default=no on PS4]]]),
++  [ if test "$withval" = "yes"; then
++      TORRENT_CHECK_OPENSSL
++    fi
++  ])
+ 
+ TORRENT_DISABLE_PTHREAD_SETNAME_NP
+ TORRENT_MINCORE

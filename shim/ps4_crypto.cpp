@@ -2,6 +2,17 @@
 // SHA-1: straightforward FIPS 180-1 style implementation.
 #include "ps4_crypto.h"
 #include <stdlib.h>
+#include <sched.h>
+
+// libc++.a of the SDK lacks __libcpp_atomic_wait(void const volatile*, long)
+// (only the int overload exists); provide a spin-yield fallback used by
+// std::atomic::wait in thread.cc.
+extern "C" void _ZNSt3__120__libcpp_atomic_waitEPVKvl(const volatile void* ptr, long val) {
+    (void)ptr; (void)val;
+    // libtorrent only uses atomic wait as a poll backoff; yield-spin briefly
+    for (int i = 0; i < 64; i++)
+        sched_yield();
+}
 
 // ---------------- SHA-1 ----------------
 static const uint32_t K[4] = {0x5A827999u, 0x6ED9EBA1u, 0x8F1BBCDCu, 0xCA62C1D6u};
@@ -82,7 +93,69 @@ int  EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s) {
     if (s) *s = 20;
     return 1;
 }
+int  EVP_DigestFinal(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s) {
+    return EVP_DigestFinal_ex(ctx, md, s);
+}
 const EVP_MD *EVP_sha1(void)                  { return &g_sha1_md; }
+
+// ---------------- Base64 (EVP_EncodeBlock/EVP_DecodeBlock) ----------------
+int EVP_EncodeBlock(unsigned char *out, const unsigned char *in, int inlen) {
+    static const char tbl[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    int i = 0, o = 0;
+    for (; i + 2 < inlen; i += 3) {
+        uint32_t v = ((uint32_t)in[i] << 16) | ((uint32_t)in[i+1] << 8) | in[i+2];
+        out[o++] = tbl[(v >> 18) & 63]; out[o++] = tbl[(v >> 12) & 63];
+        out[o++] = tbl[(v >> 6) & 63];  out[o++] = tbl[v & 63];
+    }
+    int rem = inlen - i;
+    if (rem == 1) {
+        uint32_t v = (uint32_t)in[i] << 16;
+        out[o++] = tbl[(v >> 18) & 63]; out[o++] = tbl[(v >> 12) & 63];
+        out[o++] = '='; out[o++] = '=';
+    } else if (rem == 2) {
+        uint32_t v = ((uint32_t)in[i] << 16) | ((uint32_t)in[i+1] << 8);
+        out[o++] = tbl[(v >> 18) & 63]; out[o++] = tbl[(v >> 12) & 63];
+        out[o++] = tbl[(v >> 6) & 63]; out[o++] = '=';
+    }
+    out[o] = 0;
+    return o;
+}
+
+static int b64_val(char c) {
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    return -1;
+}
+
+int EVP_DecodeBlock(unsigned char *out, const unsigned char *in, int inlen) {
+    // strip trailing '=' padding
+    while (inlen > 0 && in[inlen-1] == '=') inlen--;
+    int o = 0, i = 0;
+    for (; i + 3 < inlen; i += 4) {
+        int a = b64_val(in[i]), b = b64_val(in[i+1]), c = b64_val(in[i+2]), d = b64_val(in[i+3]);
+        if (a < 0 || b < 0 || c < 0 || d < 0) return -1;
+        uint32_t v = ((uint32_t)a << 18) | ((uint32_t)b << 12) | ((uint32_t)c << 6) | d;
+        out[o++] = (v >> 16) & 0xff; out[o++] = (v >> 8) & 0xff; out[o++] = v & 0xff;
+    }
+    int rem = inlen - i;
+    if (rem == 2) {
+        int a = b64_val(in[i]), b = b64_val(in[i+1]);
+        if (a < 0 || b < 0) return -1;
+        uint32_t v = ((uint32_t)a << 18) | ((uint32_t)b << 12);
+        out[o++] = (v >> 16) & 0xff;
+    } else if (rem == 3) {
+        int a = b64_val(in[i]), b = b64_val(in[i+1]), c = b64_val(in[i+2]);
+        if (a < 0 || b < 0 || c < 0) return -1;
+        uint32_t v = ((uint32_t)a << 18) | ((uint32_t)b << 12) | ((uint32_t)c << 6);
+        out[o++] = (v >> 16) & 0xff; out[o++] = (v >> 8) & 0xff;
+    } else if (rem != 0) {
+        return -1;
+    }
+    return o;
+}
 
 // ---------------- RC4 ----------------
 void RC4_set_key(RC4_KEY *key, int len, const unsigned char *data) {

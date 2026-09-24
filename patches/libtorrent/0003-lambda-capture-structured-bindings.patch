@@ -1,0 +1,22 @@
+diff --git a/src/torrent/runtime/proxy_manager.cc b/src/torrent/runtime/proxy_manager.cc
+index b37d61b..438fd3c 100644
+--- a/src/torrent/runtime/proxy_manager.cc
++++ b/src/torrent/runtime/proxy_manager.cc
+@@ -41,7 +41,7 @@ ProxyManager::set_proxy_url(const std::string& url) {
+   if (!net::verify_no_path_query_fragment(url))
+     throw input_error("Proxy address must not include a path, query, or fragment.");
+ 
+-  auto verify_user_password_or_empty = [schema, user, password]() {
++  auto verify_user_password_or_empty = [schema, &user, &password]() {
+       if (user.empty() || password.empty())
+         return;
+ 
+@@ -52,7 +52,7 @@ ProxyManager::set_proxy_url(const std::string& url) {
+         throw input_error("Proxy address for '" + schema + "://' must not include a password without a user.");
+     };
+ 
+-  auto verify_no_user_password = [schema, user, password]() {
++  auto verify_no_user_password = [schema, &user, &password]() {
+       if (!user.empty() || !password.empty())
+         throw input_error("Proxy address for '" + schema + "://' must not include a user or password.");
+     };

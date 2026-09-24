@@ -1,13 +1,19 @@
 # config.site for PS4 (OpenOrbis) cross-compilation of rakshasa/libtorrent
 # Cached answers for AC_CHECK_FUNCS / AC_CHECK_HEADERS that cannot run on host.
+#
+# IMPORTANT: the PS4 libc (newlib + libkernel) DOES provide real epoll
+# (epoll_create1/epoll_ctl/epoll_wait in libc.a, sys/epoll.h in the SDK) and
+# eventfd — rakshasa's stock poll_epoll.cc backend works unmodified. We only
+# cache answers for what is genuinely absent.
 
-# --- event backends: NONE available natively; we provide sceNetEpoll shim ---
+# --- event backends: epoll AVAILABLE (libc.a exports T epoll_create1/ctl/wait) ---
+ac_cv_func_epoll_create=yes
+ac_cv_func_epoll_create1=yes
+ac_cv_header_sys_epoll_h=yes
 ac_cv_func_kqueue=no
 ac_cv_func_kqueue1=no
-ac_cv_func_epoll_create=no
-ac_cv_func_epoll_create1=no
-ac_cv_func_poll=no
-ac_cv_func_select=yes          # newlib provides select() over sceNetEpoll
+
+# --- PS4-absent POSIX functions ---
 ac_cv_func_pipe2=no
 ac_cv_func_accept4=no
 ac_cv_func_inotify_init=no
@@ -28,11 +34,7 @@ ac_cv_func_inet_pton=yes
 ac_cv_func_inet_ntop=yes
 
 # --- headers ---
-ac_cv_header_sys_epoll_h=no
 ac_cv_header_sys_event_h=no
 ac_cv_header_sys_inotify_h=no
 ac_cv_header_sys_mman_h=no
 ac_cv_header_execinfo_h=no
-
-# --- kqueue/epoll configure switches (rakshasa configure.ac) ---
-# patched configure will accept --with-scenetpoll instead

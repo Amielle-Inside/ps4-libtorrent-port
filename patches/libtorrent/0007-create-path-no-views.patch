@@ -1,0 +1,40 @@
+diff --git a/src/download/download_constructor.cc b/src/download/download_constructor.cc
+index 207d81c..00a4d9a 100644
+--- a/src/download/download_constructor.cc
++++ b/src/download/download_constructor.cc
+@@ -5,7 +5,6 @@
+ #include <algorithm>
+ #include <cstring>
+ #include <limits>
+-#include <ranges>
+ 
+ #include "manager.h"
+ #include "download/download_wrapper.h"
+@@ -270,19 +269,19 @@ DownloadConstructor::parse_multi_files(const Object& b, uint32_t chunk_size) {
+ 
+ Path
+ DownloadConstructor::create_path(const Object::list_type& plist) {
+-  auto view = [&plist]() {
+-      if (!plist.empty() && plist.front().as_string().empty())
+-        return plist | std::views::drop(1);
++  // PS4 port (clang 10): no std::views — use plain iterators
++  auto view_begin = plist.begin();
++  auto view_end   = plist.end();
++  if (!plist.empty() && plist.front().as_string().empty())
++    view_begin++;
+ 
+-      return plist | std::views::drop(0);
+-    }();
+-
+-  if (view.empty())
++  if (view_begin == view_end)
+     throw input_error("Bad torrent file, \"path\" has zero entries or only an empty entry.");
+ 
+   Path p;
+ 
+-  for (const auto& path : view) {
++  for (auto view_itr = view_begin; view_itr != view_end; ++view_itr) {
++    const auto& path = *view_itr;
+     auto sanitized_name = sanitize_file_name(path.as_string(), "a value in dict-key \"path\"");
+ 
+     if (!Path::is_valid_component(sanitized_name))

@@ -1,0 +1,62 @@
+diff --git a/src/torrent/runtime/proxy_manager.cc b/src/torrent/runtime/proxy_manager.cc
+index b37d61b..11eb470 100644
+--- a/src/torrent/runtime/proxy_manager.cc
++++ b/src/torrent/runtime/proxy_manager.cc
+@@ -41,19 +41,20 @@ ProxyManager::set_proxy_url(const std::string& url) {
+   if (!net::verify_no_path_query_fragment(url))
+     throw input_error("Proxy address must not include a path, query, or fragment.");
+ 
+-  auto verify_user_password_or_empty = [schema, user, password]() {
+-      if (user.empty() || password.empty())
++  auto& user_ = user; auto& password_ = password;
++  auto verify_user_password_or_empty = [schema, &user_, &password_]() {
++      if (user_.empty() || password_.empty())
+         return;
+ 
+-      if (password.empty())
++      if (password_.empty())
+         throw input_error("Proxy address for '" + schema + "://' must not include a user without a password.");
+ 
+-      if (!user.empty())
++      if (!user_.empty())
+         throw input_error("Proxy address for '" + schema + "://' must not include a password without a user.");
+     };
+ 
+-  auto verify_no_user_password = [schema, user, password]() {
+-      if (!user.empty() || !password.empty())
++  auto verify_no_user_password = [schema, &user_, &password_]() {
++      if (!user_.empty() || !password_.empty())
+         throw input_error("Proxy address for '" + schema + "://' must not include a user or password.");
+     };
+ 
+diff --git a/src/torrent/system/scheduler.cc b/src/torrent/system/scheduler.cc
+index 08cf01e..4cfd7a8 100644
+--- a/src/torrent/system/scheduler.cc
++++ b/src/torrent/system/scheduler.cc
+@@ -19,7 +19,7 @@ SchedulerEntry::~SchedulerEntry() {
+ Scheduler::time_type
+ Scheduler::next_timeout(Scheduler::time_type max_timeout) {
+   while (!m_heap.empty() && m_heap.front()->entry == nullptr) {
+-    std::ranges::pop_heap(m_heap, [](auto& a, auto& b) { return a->time > b->time; });
++    std::pop_heap(m_heap.begin(), m_heap.end(), [](auto& a, auto& b) { return a->time > b->time; });
+ 
+     m_heap.pop_back();
+   }
+@@ -62,7 +62,7 @@ Scheduler::push_entry(SchedulerEntry* entry, time_type time) {
+   entry->set_handle(handle.get());
+ 
+   m_heap.push_back(std::move(handle));
+-  std::ranges::push_heap(m_heap, [](auto& a, auto& b) { return a->time > b->time; });
++  std::push_heap(m_heap.begin(), m_heap.end(), [](auto& a, auto& b) { return a->time > b->time; });
+ }
+ 
+ void
+@@ -144,7 +144,7 @@ Scheduler::update_wait_for_ceil_seconds(SchedulerEntry* entry, Scheduler::time_t
+ void
+ Scheduler::perform(Scheduler::time_type current_time) {
+   while (!m_heap.empty() && m_heap.front()->time <= current_time) {
+-    std::ranges::pop_heap(m_heap, [](auto& a, auto& b) { return a->time > b->time; });
++    std::pop_heap(m_heap.begin(), m_heap.end(), [](auto& a, auto& b) { return a->time > b->time; });
+ 
+     auto handle = std::move(m_heap.back());
+     m_heap.pop_back();

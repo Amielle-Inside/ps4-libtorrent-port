@@ -1,0 +1,16 @@
+diff --git a/src/net/listen.cc b/src/net/listen.cc
+index 99c77a1..1d627c8 100644
+--- a/src/net/listen.cc
++++ b/src/net/listen.cc
+@@ -110,8 +110,9 @@ Listen::open_single(listen_info listen_info, open_options options) {
+     return false;
+   }
+ 
+-  auto error_fn = [listen_fd](std::string msg) {
+-      fd_close(listen_fd);
++  auto fd_copy = listen_fd;
++  auto error_fn = [fd_copy](std::string msg) {
++      fd_close(fd_copy);
+ 
+       LT_LOG("%s : %s", msg.c_str(), system::errno_enum(errno));
+       throw resource_error(msg + ": " + std::string(strerror(errno)));

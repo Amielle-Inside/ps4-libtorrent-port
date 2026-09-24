@@ -1,18 +1,16 @@
-# Minimal smoke test: links libtorrent statically, initializes engine,
-# prints torrent::version() via debugnet/log. Proves the port compiles+links.
-OO_PS4_TOOLCHAIN ?= /opt/OpenOrbis-PS4-Toolchain
-PREFIX ?= /src/build/oo
-CXX := $(OO_PS4_TOOLCHAIN)/bin/clang++
-CXXFLAGS := -std=c++17 -O2 -I$(OO_PS4_TOOLCHAIN)/include -I$(PREFIX)/include \
-            -DPS4_PORT=1
-LDFLAGS := -L$(OO_PS4_TOOLCHAIN)/lib -L$(PREFIX)/lib \
-           -ltorrent -lz -lc -lkernel -lpthread -lSceLibcStubs \
-           -Wl,-pie -Wl,--eh-frame-hdr
+# PS4 (OpenOrbis) build of the smoke-test app
+OO_PS4_TOOLCHAIN ?= /lib/OpenOrbisSDK
+CXX      := ps4-clang++
+INCLUDES := -I$(OO_PS4_TOOLCHAIN)/include -I$(OO_PS4_TOOLCHAIN)/include/c++/v1 -I/src/build/oo/include
+LDFLAGS  := -fuse-ld=lld $(OO_PS4_TOOLCHAIN)/lib/crt1.o \
+            -Wl,--script,$(OO_PS4_TOOLCHAIN)/link.x -Wl,--eh-frame-hdr -Wl,-pie \
+            -L$(OO_PS4_TOOLCHAIN)/lib -L/src/build/oo/lib -L/opt/ps4deps/lib
+LIBS     := -ltorrent -lcurl -lz -lc -lc++ -lkernel -lm -lpthread
 
 all: torrent_test.elf
 
 torrent_test.elf: main.cc
-	$(CXX) $(CXXFLAGS) main.cc -o $@ $(LDFLAGS)
+	$(CXX) -std=c++20 -O2 -D_GNU_SOURCE -include stdint.h -include cstdlib $(INCLUDES) main.cc -o $@ $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f torrent_test.elf

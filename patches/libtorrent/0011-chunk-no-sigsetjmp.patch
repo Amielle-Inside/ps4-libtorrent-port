@@ -1,0 +1,63 @@
+diff --git a/src/data/chunk.cc b/src/data/chunk.cc
+index 7a2b318..fa34f18 100644
+--- a/src/data/chunk.cc
++++ b/src/data/chunk.cc
+@@ -37,7 +37,6 @@
+ #include "config.h"
+ 
+ #include <algorithm>
+-#include <csetjmp>
+ #include <csignal>
+ #include <cstring>
+ #include <functional>
+@@ -48,7 +47,8 @@
+ #include "chunk_iterator.h"
+ 
+ namespace {
+-thread_local sigjmp_buf            jmp_disk_full;
++// PS4 port: sigjmp_buf removed (no usable setjmp in PS4 libc); only the
++// armed flag remains for the (now re-raise) bus handler.
+ thread_local volatile sig_atomic_t jmp_disk_full_armed;
+ 
+ struct sigaction bus_handler_oldact;
+@@ -66,7 +66,12 @@ bus_handler(int signum, siginfo_t*, void*) {
+   }
+ 
+   jmp_disk_full_armed = 0;
+-  siglongjmp(jmp_disk_full, 1);
++  // PS4 port: no usable longjmp; SIGBUS-from-mmap cannot happen (mmap
++  // disabled in this port), so re-raise with default disposition instead.
++  struct sigaction sa_dfl{};
++  sa_dfl.sa_handler = SIG_DFL;
++  sigaction(signum, &sa_dfl, nullptr);
++  raise(signum);
+ }
+ 
+ class bus_handler_guard {
+@@ -282,20 +287,13 @@ Chunk::from_buffer(const void* buffer, uint32_t position, uint32_t length) {
+ 
+   bus_handler_guard guard;
+ 
+-  if (sigsetjmp(jmp_disk_full, 1) == 0) {
+-      jmp_disk_full_armed = 1;
+-
+-      do {
+-        data = itr.data();
+-        std::memcpy(data.first, buffer, data.second);
+-
+-        buffer = static_cast<const char*>(buffer) + data.second;
+-      } while (itr.next());
++  // PS4 port: no sigsetjmp — plain copy (mmap path disabled, SIGBUS impossible)
++  do {
++    data = itr.data();
++    std::memcpy(data.first, buffer, data.second);
+ 
+-      jmp_disk_full_armed = 0;
+-  } else {
+-      throw storage_error("failed to write chunk, the file was truncated or the disk is full");
+-  }
++    buffer = static_cast<const char*>(buffer) + data.second;
++  } while (itr.next());
+ 
+   return true;
+ }

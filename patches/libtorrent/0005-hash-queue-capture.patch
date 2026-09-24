@@ -1,0 +1,14 @@
+diff --git a/src/data/hash_queue.cc b/src/data/hash_queue.cc
+index 34fac76..07d5bc0 100644
+--- a/src/data/hash_queue.cc
++++ b/src/data/hash_queue.cc
+@@ -144,7 +144,8 @@ HashQueue::work() {
+     // TODO: This is not optimal as we jump around... Check for front
+     // of HashQueue in done_chunks instead.
+ 
+-    auto itr = std::find_if(begin(), end(), [hash_chunk](auto& node) { return node.get_chunk() == hash_chunk; });
++    auto* hc = &hash_chunk;
++    auto itr = std::find_if(begin(), end(), [hc](auto& node) { return node.get_chunk() == *hc; });
+ 
+     // TODO: Fix this...
+     if (itr == end())

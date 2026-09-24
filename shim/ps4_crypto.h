@@ -34,7 +34,10 @@ void        EVP_MD_CTX_reset(EVP_MD_CTX *ctx);
 int         EVP_DigestInit(EVP_MD_CTX *ctx, const EVP_MD *type);
 int         EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d, size_t n);
 int         EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s);
+int         EVP_DigestFinal(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s);
 const EVP_MD *EVP_sha1(void);
+int         EVP_EncodeBlock(unsigned char *out, const unsigned char *in, int inlen);
+int         EVP_DecodeBlock(unsigned char *out, const unsigned char *in, int inlen);
 
 // --- RC4 ---
 typedef struct RC4_KEY_st {
