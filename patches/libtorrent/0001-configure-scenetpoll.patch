@@ -1,0 +1,37 @@
+diff --git a/configure.ac b/configure.ac
+index 37009d9..64da9e2 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -42,6 +42,18 @@ TORRENT_WITHOUT_EPOLL
+ TORRENT_WITH_ADDRESS_SPACE
+ TORRENT_WITH_INOTIFY
+ 
++dnl PS4 port: sceNetEpoll poll backend (poll_scenetpoll.cc)
++AC_ARG_WITH(scenetpoll,
++  AS_HELP_STRING([--with-scenetpoll],[use PS4 sceNetEpoll poll backend]),
++  [
++    if test "$withval" = "yes"; then
++      use_scenetpoll=yes
++      AC_DEFINE(USE_SCENETPOLL, 1, Use PS4 sceNetEpoll.)
++      dnl satisfy the backend guard below; real backend chosen at compile time
++      use_epoll=yes
++    fi
++  ])
++
+ AC_ARG_ENABLE(attribute-visibility,
+   AS_HELP_STRING([--disable-attribute-visibility],[disable symbol visibility attribute [[default=enable]]]),
+   [
+@@ -79,7 +91,12 @@ CFLAGS="$LIBCURL_CFLAGS $PTHREAD_CFLAGS $ZLIB_CFLAGS $CFLAGS"
+ CXXFLAGS="$LIBCURL_CFLAGS $LIBCURL_CPPFLAGS $PTHREAD_CFLAGS $ZLIB_CFLAGS $CXXFLAGS"
+ LIBS="$LIBCURL_LIBS $ATOMIC_LIBS $PTHREAD_LIBS $ZLIB_LIBS $LIBS"
+ 
+-TORRENT_CHECK_OPENSSL
++AC_ARG_WITH(openssl,
++  AS_HELP_STRING([--with-openssl],[enable OpenSSL crypto (MSE) [[default=no on PS4]]]),
++  [ if test "$withval" = "yes"; then
++      TORRENT_CHECK_OPENSSL
++    fi
++  ])
+ 
+ TORRENT_DISABLE_PTHREAD_SETNAME_NP
+ TORRENT_MINCORE

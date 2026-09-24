@@ -1,0 +1,4 @@
+# keep image context small — only docker/ and shim/ are needed
+*
+!docker/
+!shim/

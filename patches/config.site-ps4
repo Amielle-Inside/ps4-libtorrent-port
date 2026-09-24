@@ -24,7 +24,7 @@ ac_cv_func_mmap=no
 ac_cv_func_clock_gettime=yes
 ac_cv_func_getaddrinfo=yes
 ac_cv_func_gethostbyname=yes
-ac_cv_func inet_pton=yes
+ac_cv_func_inet_pton=yes
 ac_cv_func_inet_ntop=yes
 
 # --- headers ---
