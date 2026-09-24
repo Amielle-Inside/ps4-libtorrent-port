@@ -6,3 +6,12 @@ build/
 *.oelf
 *.pkg
 .dockerenv
+app/tchain/
+app/*.elf
+app/*.bin
+app/*.oelf
+app/*.pkg
+app/pkg.gp4
+app/sce_sys/
+tools/binaries.tar.gz
+tools/cgp4.tgz
